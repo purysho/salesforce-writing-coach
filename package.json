@@ -1,0 +1,14 @@
+{
+  "name": "salesforce-writing-coach",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Salesforce-native structural writing coach for customer-facing email",
+  "scripts": {
+    "test": "node --test tests/reviewer.test.mjs",
+    "test:engine": "node --test tests/reviewer.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

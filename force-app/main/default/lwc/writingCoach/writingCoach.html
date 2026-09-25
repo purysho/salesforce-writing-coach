@@ -1,0 +1,87 @@
+<template>
+    <lightning-quick-action-panel header="Writing Coach">
+        <div class="coach">
+            <section class="editor">
+                <lightning-input
+                    type="text"
+                    label="Subject"
+                    value={subject}
+                    onchange={handleSubjectChange}>
+                </lightning-input>
+
+                <div class="editor-block">
+                    <lightning-input-rich-text
+                        label="Email draft"
+                        value={draftHtml}
+                        placeholder="Write or paste the customer email here…"
+                        onchange={handleDraftChange}>
+                    </lightning-input-rich-text>
+                </div>
+
+                <div class="controls">
+                    <lightning-button
+                        variant="brand"
+                        label="Review structure"
+                        onclick={handleReview}>
+                    </lightning-button>
+
+                    <lightning-input
+                        class="live-toggle"
+                        type="toggle"
+                        label="Live Coach"
+                        message-toggle-active="On"
+                        message-toggle-inactive="Off"
+                        checked={liveCoach}
+                        onchange={handleLiveCoachChange}>
+                    </lightning-input>
+                </div>
+            </section>
+
+            <aside class="review-panel">
+                <div class="review-header">
+                    <div>
+                        <p class="eyebrow">STRUCTURE</p>
+                        <h2>{findingsLabel}</h2>
+                    </div>
+                    <p class="summary">{reviewSummary}</p>
+                </div>
+
+                <template if:true={hasFindings}>
+                    <div class="findings">
+                        <template for:each={findings} for:item="finding">
+                            <article class="finding" key={finding.id}>
+                                <div class="finding-topline">
+                                    <lightning-badge label={finding.category}></lightning-badge>
+                                    <span class="severity">{finding.severity}</span>
+                                </div>
+                                <h3>{finding.title}</h3>
+                                <p>{finding.message}</p>
+                                <template if:true={finding.evidence}>
+                                    <blockquote>{finding.evidence}</blockquote>
+                                </template>
+                                <p class="suggestion">{finding.suggestion}</p>
+                            </article>
+                        </template>
+                    </div>
+                </template>
+
+                <template if:false={hasFindings}>
+                    <div class="empty-state">
+                        <p>
+                            Write normally, then review the structure. The coach checks hierarchy,
+                            supporting logic, precision, and next action before style.
+                        </p>
+                    </div>
+                </template>
+            </aside>
+        </div>
+
+        <div slot="footer">
+            <lightning-button
+                variant="brand"
+                label="Open in Salesforce Email"
+                onclick={handleOpenEmail}>
+            </lightning-button>
+        </div>
+    </lightning-quick-action-panel>
+</template>
