@@ -1,3 +1,11 @@
+.topbar {
+    display: grid;
+    grid-template-columns: minmax(14rem, 18rem) auto;
+    gap: 1rem;
+    align-items: end;
+    margin-bottom: 1rem;
+}
+
 .coach {
     display: grid;
     grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 0.8fr);
@@ -23,6 +31,15 @@
 
 .live-toggle {
     min-width: 9rem;
+}
+
+.guidance {
+    margin-top: 0.75rem;
+    padding: 0.75rem 0.9rem;
+    border-left: 3px solid var(--lwc-colorBorderBrand, #1b96ff);
+    background: var(--lwc-colorBackground, #f3f3f3);
+    border-radius: 0.25rem;
+    line-height: 1.4;
 }
 
 .review-panel {
@@ -51,9 +68,17 @@ h2 {
     margin-top: 0.1rem;
 }
 
+.intent,
 .summary {
     color: var(--lwc-colorTextWeak, #706e6b);
     font-size: 0.75rem;
+}
+
+.intent {
+    margin-top: 0.2rem;
+}
+
+.summary {
     white-space: nowrap;
 }
 
@@ -106,6 +131,13 @@ h2 {
     font-weight: 600;
 }
 
+.finding-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
 .empty-state {
     border: 1px dashed var(--lwc-colorBorder, #dddbda);
     border-radius: 0.5rem;
@@ -115,6 +147,7 @@ h2 {
 }
 
 @media (max-width: 50rem) {
+    .topbar,
     .coach {
         grid-template-columns: 1fr;
     }
