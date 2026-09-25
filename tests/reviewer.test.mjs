@@ -262,3 +262,49 @@ Please confirm the revised date by 5 PM Friday.
   const result = reviewEmail(draft);
   assert.equal(warnings(result).length, 0);
 });
+
+test("flags a generic subject when subject review is enabled", () => {
+  const draft = `
+We recommend moving the launch to 18 October.
+
+Please confirm the revised date by Friday.
+`;
+
+  const result = reviewEmail(draft, { subject: "Update" });
+  assert.ok(ids(result).includes("subject-generic"));
+});
+
+test("accepts a specific subject", () => {
+  const draft = `
+We recommend moving the launch to 18 October.
+
+Please confirm the revised date by Friday.
+`;
+
+  const result = reviewEmail(draft, { subject: "Launch date recommendation — 18 October" });
+  assert.ok(!ids(result).includes("subject-generic"));
+  assert.ok(!ids(result).includes("subject-long"));
+});
+
+test("flags an action request with no timing", () => {
+  const draft = `
+We recommend moving the launch to 18 October.
+
+Please confirm the revised date.
+`;
+
+  const result = reviewEmail(draft);
+  assert.ok(ids(result).includes("next-action-timing-missing"));
+});
+
+test("accepts a timed action request", () => {
+  const draft = `
+We recommend moving the launch to 18 October.
+
+Please confirm the revised date by 5 PM Friday.
+`;
+
+  const result = reviewEmail(draft);
+  assert.ok(!ids(result).includes("next-action-timing-missing"));
+});
+
