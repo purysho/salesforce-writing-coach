@@ -23,8 +23,8 @@ jobs:
       - name: Check reviewer syntax
         run: node --check force-app/main/default/lwc/writingReviewEngine/writingReviewEngine.js
 
-      - name: Check coach syntax
-        run: node --check force-app/main/default/lwc/writingCoach/writingCoach.js
+      # LWC class decorators such as @api are transformed by the Salesforce compiler
+      # and aren't valid input to Node's plain --check parser.
 
       - name: Run structural engine tests
         run: npm test
