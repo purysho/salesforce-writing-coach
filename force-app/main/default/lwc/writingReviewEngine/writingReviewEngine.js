@@ -86,6 +86,19 @@ const SIGNOFF_PATTERNS = [
   /^(?:best|regards|kind regards|thanks|thank you|sincerely|cheers)[,!]?$/i
 ];
 
+const GENERIC_SUBJECT_PATTERNS = [
+  /^(?:update|quick update|following up|follow up|question|hello|hi|checking in)$/i,
+  /^(?:project|meeting|request)$/i
+];
+
+const TIMING_PATTERNS = [
+  /\bby\s+(?:\d{1,2}(?::\d{2})?\s*(?:am|pm)?|(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)|(?:today|tomorrow)|\d{1,2}\s+[a-z]{3,9})\b/i,
+  /\bbefore\s+(?:\d{1,2}(?::\d{2})?\s*(?:am|pm)?|(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)|(?:today|tomorrow)|\d{1,2}\s+[a-z]{3,9})\b/i,
+  /\b(?:today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i,
+  /\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/i,
+  /\b\d{1,2}\s+(?:january|february|march|april|may|june|july|august|september|october|november|december)\b/i
+];
+
 const STOP_WORDS = new Set([
   "the","a","an","and","or","but","to","of","in","on","for","with","as","at","by",
   "is","are","was","were","be","been","being","it","this","that","these","those",
@@ -264,11 +277,19 @@ function requiresNextAction(intent) {
   return intent === "recommendation" || intent === "request" || intent === "change";
 }
 
-function hasNextAction(sentences) {
+function actionTailText(sentences) {
   const substantive = substantiveSentences(sentences);
   const tailStart = Math.max(0, Math.floor(substantive.length * 0.55));
-  const tail = substantive.slice(tailStart).map(({ sentence }) => sentence).join(" ");
+  return substantive.slice(tailStart).map(({ sentence }) => sentence).join(" ");
+}
+
+function hasNextAction(sentences) {
+  const tail = actionTailText(sentences);
   return ACTION_PATTERNS.some((pattern) => pattern.test(tail));
+}
+
+function hasSpecificTiming(text) {
+  return TIMING_PATTERNS.some((pattern) => pattern.test(text));
 }
 
 function makeFinding({
@@ -408,6 +429,66 @@ export function reviewEmail(input = "", options = {}) {
   const intentResult = inferIntent(sentences, explicitIntent);
   const intent = intentResult.intent;
   const findings = [];
+
+  if (Object.prototype.hasOwnProperty.call(options, "subject")) {
+    const subject = stripHtml(options.subject || "");
+
+    if (!subject) {
+      findings.push(
+        makeFinding({
+          id: "subject-missing",
+          category: "subject",
+          severity: "info",
+          title: "Subject line is empty",
+          message: "The customer will need a useful subject before the message is sent.",
+          suggestion: "Use a short subject that names the decision, change, request, or update.",
+          action: {
+            type: "manual-subject",
+            label: "Write subject",
+            safe: false
+          }
+        })
+      );
+    } else if (
+      GENERIC_SUBJECT_PATTERNS.some((pattern) => pattern.test(subject)) ||
+      wordCount(subject) < 2
+    ) {
+      findings.push(
+        makeFinding({
+          id: "subject-generic",
+          category: "subject",
+          severity: "info",
+          title: "Subject line is too generic",
+          message: `“${subject}” does not tell the customer what the message is about.`,
+          suggestion: "Name the concrete decision, change, request, or update in the subject.",
+          evidence: subject,
+          action: {
+            type: "manual-subject",
+            label: "Make subject specific",
+            safe: false
+          }
+        })
+      );
+    } else if (subject.length > 80 || wordCount(subject) > 12) {
+      findings.push(
+        makeFinding({
+          id: "subject-long",
+          category: "subject",
+          severity: "info",
+          title: "Subject line may be too long",
+          message: "The subject may be difficult to scan in an inbox.",
+          suggestion: "Keep the subject focused on one concrete message.",
+          evidence: subject,
+          action: {
+            type: "manual-subject",
+            label: "Shorten subject",
+            safe: false
+          }
+        })
+      );
+    }
+  }
+
   const main = findMainMessage(sentences, intent);
 
   if (!main) {
@@ -461,7 +542,10 @@ export function reviewEmail(input = "", options = {}) {
     );
   }
 
-  if (requiresNextAction(intent) && !hasNextAction(sentences)) {
+  const actionPresent = hasNextAction(sentences);
+  const actionTail = actionTailText(sentences);
+
+  if (requiresNextAction(intent) && !actionPresent) {
     findings.push(
       makeFinding({
         id: "next-action-missing",
@@ -473,6 +557,27 @@ export function reviewEmail(input = "", options = {}) {
         action: {
           type: "manual-next-action",
           label: "Add next action",
+          safe: false
+        }
+      })
+    );
+  } else if (
+    requiresNextAction(intent) &&
+    actionPresent &&
+    !hasSpecificTiming(actionTail)
+  ) {
+    findings.push(
+      makeFinding({
+        id: "next-action-timing-missing",
+        category: "action",
+        severity: "info",
+        title: "Next action has no timing",
+        message: "The customer is asked to act, but the message does not say when.",
+        suggestion: "Add a date or time when the request is time-sensitive.",
+        evidence: actionTail,
+        action: {
+          type: "manual-action-timing",
+          label: "Add timing",
           safe: false
         }
       })
