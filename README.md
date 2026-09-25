@@ -44,15 +44,19 @@ V1 performs deterministic review locally in the Salesforce client. No external A
 
 ## Current milestone
 
-**Milestone 0 — Foundation**
+**V0.2 — Intent-aware reviewer**
 
-- [x] Product charter
-- [x] Deterministic review rule set
-- [x] Synthetic regression fixtures
-- [x] Salesforce LWC screen-action shell
-- [x] Native email-composer handoff
-- [ ] Deploy to a Salesforce developer org
-- [ ] Validate on Contact / Lead / Account / Opportunity / Case
+- [x] Intent-aware deterministic review engine
+- [x] Informational-update vs action-oriented CTA logic
+- [x] Subject-line review
+- [x] Action-timing guidance
+- [x] Safe block-level suggestion actions
+- [x] Intent override and dismissible findings
+- [x] Expanded synthetic regression suite
+- [x] Salesforce Developer Org deployment guide
+- [ ] Deploy V0.2 to a Salesforce developer org
+- [ ] Pass the Contact end-to-end smoke test
+- [ ] Validate on Lead / Account / Opportunity / Case
 - [ ] Run first 20 discovery interviews
 - [ ] Recruit three design-partner organizations
 

@@ -17,6 +17,9 @@
                 <object>Opportunity</object>
                 <object>Case</object>
             </objects>
+            <supportedFormFactors>
+                <supportedFormFactor type="Large"/>
+            </supportedFormFactors>
         </targetConfig>
     </targetConfigs>
 </LightningComponentBundle>
