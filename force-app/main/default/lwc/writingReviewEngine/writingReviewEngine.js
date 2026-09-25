@@ -297,18 +297,17 @@ function parseBlocks(input) {
 }
 
 function replaceBlocks(input, blocks) {
-  const matches = [...input.matchAll(/<(p|div)([^>]*)>([\s\S]*?)<\/\1>/gi)];
+  const blockPattern = /<(p|div)([^>]*)>([\s\S]*?)<\/\1>/gi;
+  const matches = [...input.matchAll(blockPattern)];
   if (!matches.length) return input;
 
-  let cursor = 0;
-  let output = "";
-  for (const match of matches) {
-    output += input.slice(cursor, match.index);
-    output += blocks.shift()?.html ?? match[0];
-    cursor = match.index + match[0].length;
-  }
-  output += input.slice(cursor);
-  return output;
+  // Safe automatic edits are limited to rich-text values whose meaningful content
+  // is represented by top-level paragraph/div blocks. If there is other content
+  // around those blocks, keep the original rather than risk damaging formatting.
+  const remainder = input.replace(blockPattern, "").trim();
+  if (remainder) return input;
+
+  return blocks.map((block) => block.html).join("");
 }
 
 export function applyReviewAction(input = "", finding) {
