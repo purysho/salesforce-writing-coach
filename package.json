@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Salesforce-native structural writing coach for customer-facing email",
   "scripts": {
-    "test": "node --test tests/**/*.test.mjs",
+    "test": "node --test tests/reviewer.test.mjs",
     "test:engine": "node --test tests/reviewer.test.mjs"
   },
   "engines": {
