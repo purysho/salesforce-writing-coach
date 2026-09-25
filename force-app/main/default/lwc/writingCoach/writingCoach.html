@@ -1,5 +1,25 @@
 <template>
     <lightning-quick-action-panel header="Writing Coach">
+        <div class="topbar">
+            <lightning-combobox
+                name="intent"
+                label="Message type"
+                value={selectedIntent}
+                options={intentOptions}
+                onchange={handleIntentChange}>
+            </lightning-combobox>
+
+            <lightning-input
+                class="live-toggle"
+                type="toggle"
+                label="Live Coach"
+                message-toggle-active="On"
+                message-toggle-inactive="Off"
+                checked={liveCoach}
+                onchange={handleLiveCoachChange}>
+            </lightning-input>
+        </div>
+
         <div class="coach">
             <section class="editor">
                 <lightning-input
@@ -24,17 +44,13 @@
                         label="Review structure"
                         onclick={handleReview}>
                     </lightning-button>
-
-                    <lightning-input
-                        class="live-toggle"
-                        type="toggle"
-                        label="Live Coach"
-                        message-toggle-active="On"
-                        message-toggle-inactive="Off"
-                        checked={liveCoach}
-                        onchange={handleLiveCoachChange}>
-                    </lightning-input>
                 </div>
+
+                <template if:true={showGuidance}>
+                    <div class="guidance" role="status">
+                        {guidanceMessage}
+                    </div>
+                </template>
             </section>
 
             <aside class="review-panel">
@@ -42,6 +58,7 @@
                     <div>
                         <p class="eyebrow">STRUCTURE</p>
                         <h2>{findingsLabel}</h2>
+                        <p class="intent">{intentSummary}</p>
                     </div>
                     <p class="summary">{reviewSummary}</p>
                 </div>
@@ -54,12 +71,42 @@
                                     <lightning-badge label={finding.category}></lightning-badge>
                                     <span class="severity">{finding.severity}</span>
                                 </div>
+
                                 <h3>{finding.title}</h3>
                                 <p>{finding.message}</p>
+
                                 <template if:true={finding.evidence}>
                                     <blockquote>{finding.evidence}</blockquote>
                                 </template>
+
                                 <p class="suggestion">{finding.suggestion}</p>
+
+                                <div class="finding-actions">
+                                    <template if:true={finding.showSafeAction}>
+                                        <lightning-button
+                                            variant="neutral"
+                                            label={finding.actionLabel}
+                                            data-finding-id={finding.id}
+                                            onclick={handleApplyFinding}>
+                                        </lightning-button>
+                                    </template>
+
+                                    <template if:true={finding.manualAction}>
+                                        <lightning-button
+                                            variant="neutral"
+                                            label={finding.actionLabel}
+                                            data-finding-id={finding.id}
+                                            onclick={handleManualFinding}>
+                                        </lightning-button>
+                                    </template>
+
+                                    <lightning-button
+                                        variant="base"
+                                        label="Dismiss"
+                                        data-finding-id={finding.id}
+                                        onclick={handleDismissFinding}>
+                                    </lightning-button>
+                                </div>
                             </article>
                         </template>
                     </div>
