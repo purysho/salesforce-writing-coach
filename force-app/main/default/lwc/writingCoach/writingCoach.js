@@ -105,7 +105,8 @@ export default class WritingCoach extends NavigationMixin(LightningElement) {
 
   runReview() {
     const result = reviewEmail(this.draftHtml, {
-      intent: this.selectedIntent
+      intent: this.selectedIntent,
+      subject: this.subject
     });
 
     this.findings = result.findings
