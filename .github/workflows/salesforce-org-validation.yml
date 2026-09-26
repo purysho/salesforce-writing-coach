@@ -1,0 +1,85 @@
+name: Salesforce org validation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-org:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SALESFORCE_SFDX_AUTH_URL: ${{ secrets.SALESFORCE_SFDX_AUTH_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Salesforce CLI
+        run: npm install --global @salesforce/cli
+
+      - name: Require org credential
+        shell: bash
+        run: |
+          if [ -z "$SALESFORCE_SFDX_AUTH_URL" ]; then
+            echo "Missing repository secret SALESFORCE_SFDX_AUTH_URL."
+            echo "Store an SFDX auth URL for a disposable Developer Edition or sandbox before running this workflow."
+            exit 1
+          fi
+
+      - name: Authenticate validation org
+        shell: bash
+        run: |
+          mkdir -p validation-artifacts
+          printf '%s' "$SALESFORCE_SFDX_AUTH_URL" > validation-artifacts/auth.txt
+          sf org login sfdx-url             --sfdx-url-file validation-artifacts/auth.txt             --alias writing-coach-validation             --set-default
+          rm -f validation-artifacts/auth.txt
+          sf org display             --target-org writing-coach-validation             --json > validation-artifacts/org-display.json
+
+      - name: Validate metadata deployment
+        run: |
+          sf project deploy validate             --target-org writing-coach-validation             --source-dir force-app             --wait 20             --json > validation-artifacts/deploy-validate.json
+
+      - name: Deploy V0.2
+        run: |
+          sf project deploy start             --target-org writing-coach-validation             --source-dir force-app             --wait 20             --json > validation-artifacts/deploy.json
+
+      - name: Verify Lightning component bundles
+        run: |
+          sf data query             --target-org writing-coach-validation             --use-tooling-api             --query "SELECT Id, DeveloperName, ApiVersion FROM LightningComponentBundle WHERE DeveloperName IN ('writingCoach','writingReviewEngine') ORDER BY DeveloperName"             --json > validation-artifacts/lwc-bundles.json
+
+      - name: Redact org output
+        if: always()
+        shell: bash
+        run: |
+          rm -f validation-artifacts/auth.txt
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path("validation-artifacts/org-display.json")
+          if path.exists():
+              try:
+                  data = json.loads(path.read_text())
+                  result = data.get("result") or {}
+                  for key in ("accessToken", "clientId", "sfdxAuthUrl"):
+                      result.pop(key, None)
+                  path.write_text(json.dumps(data, indent=2))
+              except Exception:
+                  pass
+          PY
+
+      - name: Upload validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: salesforce-org-validation
+          path: validation-artifacts/
+          if-no-files-found: warn
+          retention-days: 14

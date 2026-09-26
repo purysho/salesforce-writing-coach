@@ -54,6 +54,8 @@ V1 performs deterministic review locally in the Salesforce client. No external A
 - [x] Intent override and dismissible findings
 - [x] Expanded synthetic regression suite
 - [x] Salesforce Developer Org deployment guide
+- [x] Reproducible authenticated-org validation workflow
+- [ ] Run the authenticated-org validation workflow
 - [ ] Deploy V0.2 to a Salesforce developer org
 - [ ] Pass the Contact end-to-end smoke test
 - [ ] Validate on Lead / Account / Opportunity / Case
@@ -80,6 +82,8 @@ sf project deploy start --target-org writing-coach-dev
 ```
 
 After deployment, create an object-specific Lightning quick action for the `writingCoach` component and add it to the relevant page layout.
+
+For reproducible org evidence, add a repository secret named `SALESFORCE_SFDX_AUTH_URL` containing an SFDX auth URL for a disposable Developer Edition/sandbox and run the **Salesforce org validation** workflow manually. Record Lightning UI results in [docs/ORG_VALIDATION_RESULTS.md](docs/ORG_VALIDATION_RESULTS.md).
 
 ## Product principles
 
